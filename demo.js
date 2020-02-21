@@ -196,4 +196,215 @@
   display('Nolan  __proto__ after roberto.age change: ' + nolan.__proto__.age); //  30
   display('Nolan  age after roberto.age change: ' + nolan.age); //  30
 
+  display('willie has age property: ' + willie.hasOwnProperty('age')) // false
+  display('roberto has age property: ' + roberto.hasOwnProperty('age')) // true
+  display('nolan has age property: ' + nolan.hasOwnProperty('age')) // false
+
+  // this createa new instance of Person2 protoytype, does not change the original
+  // the Person2 now has a new prototype of { age: 44 } for new instances
+  // so any exiting instance do not change, but new instances will use the new prptotype instance
+  Person2.prototype = { age: 44 };
+  display('willie age after Person2.prototype = {age:44}: ' + willie.age); //  30
+  display('roberto age after Person2.prototype = {age:44}: ' + roberto.age); //  35
+  display('nolan age after Person2.prototype = {age:44}: ' + nolan.age); //  30
+
+  let steve = new Person2('Steve', 'Carlton');
+
+  display('steve age create new Person2}: ' + steve.age); //  44
+
+
+  // *************************************************
+  // Prototype Inheritance
+  // *************************************************
+
+  // how much used??
+
+  function PersonS(fName, lName, age) {
+    this.fName = fName;
+    this.lName = lName;
+    this.age = age;
+    this.tfunc = function () { return 'got the funk' }
+    Object.defineProperty(this, 'fullName', {
+      get: function () {
+        return this.fName + ' ' + this.lName;
+      },
+      enumerable: true
+    });
+  }
+
+  // adding PersonS.call add the Student properties to Student
+  // calls Person function, setting the context of this
+  function Student(fName, lName, age) {
+
+    PersonS.call(this, fName, lName, age);
+    this.enrolledCourses = [];
+
+    this.enroll = function (courseId) {
+      this.enrolledCourses.push(courseId)
+    }
+
+    this.getCourses = function () {
+      return this.fullName + ' is enrolled in the following courses: ' +
+        this.enrolledCourses.join(', ');
+    }
+
+  }
+  display('Before Student.prototype create PersonS.prototype changes: ')
+  display(Student.prototype.constructor) // function Student details
+
+  Student.prototype = Object.create(PersonS.prototype);
+  display('After Student.prototype create PersonS.prototype changes: ')
+  display(Student.prototype.constructor) // function PersonS details
+
+  Student.prototype.constructor = Student;
+  display('After Student.prototype.constructor changes:  ')
+  display(Student.prototype.constructor) // function Student details
+
+  let daffy = new Student('Daffy', 'Duck', 124);
+
+  display('daffy: ')
+  display('new student daffy: ' + JSON.stringify(daffy)); // {"enrolledCourses": []}
+  display(daffy) // Student details
+  display(daffy.fullName); // Daffy Duck
+  display(daffy.tfunc()); // got the funk
+
+  daffy.enroll('DCK101');
+  daffy.enroll('QUA200');
+  daffy.enroll('ACT150');
+  display(daffy.getCourses()) // courses listed
+
+  display(daffy.__proto__) // Student
+  display(daffy.__proto__.__proto__) // PersonS
+  display(daffy.__proto__.__proto__.__proto__) // Oject
+  display(daffy.__proto__.__proto__.__proto__.__proto__) // null
+
+  // ************************************************
+  // CLASSES
+  // ************************************************
+  display('***** Classes ************************')
+  display('***** Classes ************************')
+  display('***** Classes ************************')
+  // replace all the function stuff above
+
+  class PersonT {
+    // constructor properties exist on instance
+    constructor(fName, lName, age) {
+      this.fName = fName;
+      this.lName = lName;
+      this.age = age;
+    }
+    // static property
+    static adultAge = 18;
+
+    isAdult() {
+      return this.age > 18;
+    }
+
+    // setter and getter exist only in protype
+    // getter
+    get fullName() {
+      return this.fName + ' ' + this.lName;
+    }
+    // setter
+    set fullName(fullName) {
+      const nameParts = fullName.split(' ');
+      this.fName = nameParts[0];
+      this.lName = nameParts[1];
+    }
+
+  }
+
+  let syd = new PersonT('Syd', 'Finch', 23);
+  display('syd: ');
+  display(syd);
+  display(syd.fullName);
+  syd.fullName = 'Sydney Finch,Jr.';
+  display(syd.fullName) // 'Sydney Finch,Jr.'
+  display(syd.isAdult()); // true
+
+  display(syd) // PersonT details except no isAdult or fullName, no get/set
+
+  display(syd.prototype) // undefined
+  display(syd.__proto__) // PersonT {}  empty
+  display(PersonT.prototype) // PersonT {}   empty
+  display(PersonT.__proto__) // function() {[native code]}
+
+  Object.defineProperty(PersonT.prototype, 'fullName', { enumerable: true });
+  display(syd) // PersonT details including fullName, no isAdult
+  Object.defineProperty(PersonT.prototype, 'isAdult', { enumerable: true });
+  display(syd) // PersonT details including fullName and isAdult
+
+  let cal = new PersonT('Cal', 'Ripken', 28);
+  display(cal) // PersonT details including fullName and isAdult
+
+  // IHERITANCE
+
+
+  class StudentT extends PersonT {
+    constructor(fName, lName, age) {
+      // super calls constructor of class being extended
+      super(fName, lName, age);
+      this.enrolledCourses = [];
+    }
+
+    // static can be executed without having an instance
+    static fromPerson(person) {
+      return new Student(person.fName, person.lName, person.age)
+    }
+
+    enroll(courseId) {
+      this.enrolledCourses.push(courseId)
+    }
+
+    getCourses() {
+      return this.fullName + ' is enrolled in the following courses: ' +
+        this.enrolledCourses.join(', ');
+    }
+  }
+
+  let brooks = new StudentT('Brooks', 'Robinson', 26);
+
+  display('brooks');
+  display(brooks); // everything about Brooks - PersonT and StudentT
+  brooks.enroll('BAS500');
+  brooks.enroll('3RD999')
+  display(brooks.getCourses()); // shows courses
+
+  // executing static method
+  let brooksStudent = StudentT.fromPerson(brooks);
+  display('brooksStudent');
+  display(brooksStudent); // displays everthing
+
+  // *************************************
+  // REGEX
+  // *************************************
+  display('**** Regex *********************************');
+
+
+  let regex = /[a-z]/g;
+  // test returns boolean
+  display(regex.test('3aZ'));
+
+  
+  function findAlerts(logData) {
+
+    // this uses regex groups which will create multi entries in results table - 
+    // without groups, only 1 entry in results
+    const regex = /ERROR(.*?):(.*?);/g;
+    let result = regex.exec(logData);
+
+    while (result != null) {
+      display(result[0]);
+      display(result[1]);
+      display(result[2]);
+      // console.log(result)
+      display('***********---------------------------------------');
+      result = regex.exec(logData);
+    }
+  }
+
+  let logData = 'Hb:ERROR(a):FailedValidation;3278:3248,ERROR(b):fsdhjk;';
+  let results = findAlerts(logData)
+  // display(results)
+  // console.log(results)
 })();
